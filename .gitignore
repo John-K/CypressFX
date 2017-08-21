@@ -1,0 +1,6 @@
+*.pyc
+.eggs
+CypressFX.egg-info
+dist
+build/
+venv
