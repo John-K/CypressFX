@@ -1,11 +1,6 @@
---------------------------
-Python Cypress FX library
---------------------------
-
-Author: John Kelley
-Contact: john@kelley.ca
-Date: 2017/08/20
-Version: 0.1
+------------------------
+Python Cypress FX Module
+------------------------
 
 Introduction
 ------------
