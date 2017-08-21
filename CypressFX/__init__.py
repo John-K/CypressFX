@@ -14,7 +14,7 @@ class FX2(object):
     CMD_RW_EEPROM = 0xA2
     def __init__(self, usbDev):
         if not usbDev:
-            raise AttributeError, "USB Device passed is not valid"
+            raise AttributeError("USB Device passed is not valid")
         self.dev = usbDev
         self.running_vend_ax_fw = False
 
@@ -70,6 +70,6 @@ class FX2(object):
                                            data)
             total += wrote
             if not wrote == len(data):
-                raise IOError, "Failed to write %d bytes to %x" % (len(data), seg_start)
+                raise IOError("Failed to write %d bytes to %x" % (len(data), seg_start))
         self.reset(enable_cpu=True)
         return total

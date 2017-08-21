@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """fxload python tool"""
 
+from __future__ import print_function
 from CypressFX import FX2
 import argparse
 import binascii
@@ -26,7 +27,7 @@ def main():
     if args.device:
         info = args.device.split(':')
         if not len(info) == 2:
-            print "Error: invalid device '%s'" % args.device
+            print("Error: invalid device '%s'" % args.device)
             sys.exit(1)
         vid = int(info[0],0)
         pid = int(info[1],0)
@@ -34,47 +35,47 @@ def main():
     elif args.address:
         info = args.address.split(',')
         if not len(info) == 2:
-            print "Error: invalid device address '%s'" % args.address
+            print("Error: invalid device address '%s'" % args.address)
             sys.exit(1)
         bus = int(info[0])
         addr = int(info[1])
         dev = FX2.with_bus_address(bus, addr)
     else:
-        print "Error: no device was specified"
+        print("Error: no device was specified")
         sys.exit(1)
 
     if not dev:
-        print "Error: could not find a suitable USB device"
+        print("Error: could not find a suitable USB device")
         sys.exit(1)
 
     if args.read_eeprom:
-        print "Reading EEPROM..."
+        print("Reading EEPROM...")
         data = dev.read_eeprom()
-        print "Data[%d]" % len(data),
+        print("Data[%d]" % len(data), end='')
         for d in data:
-            print "%02x" % d,
-        print
+            print("%02x" % d, end='')
+        print()
 
     if args.write_eeprom:
         to_write = len(args.write_eeprom)
         if to_write % 2 != 0:
-            print "Error: an odd number of characters was supplied"
+            print("Error: an odd number of characters was supplied")
             sys.exit(1)
         to_write /= 2
-        print "Writing %d bytes to EEPROM..." % to_write
+        print("Writing %d bytes to EEPROM..." % to_write)
         data = binascii.unhexlify(args.write_eeprom)
         assert to_write == len(data)
         wrote = dev.write_eeprom(data)
         assert wrote == to_write
-        print
+        print()
 
     if args.input:
-        print "Programming '%s'..." % args.input,
+        print("Programming '%s'..." % args.input, end='')
         wrote = dev.load_intelhex_firmware(args.input)
         if wrote > 0:
-            print "complete!"
+            print("complete!")
         else:
-            print "failed!"
+            print("failed!")
             
 if __name__ == '__main__':
     main()
