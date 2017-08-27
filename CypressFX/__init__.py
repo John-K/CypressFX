@@ -87,7 +87,7 @@ class FX2(object):
                                   seg_start))
                 total += wrote
                 offset += wrote
-                data = [end:]
+                data = data[end:]
 
         self.reset(enable_cpu=True)
         return total
