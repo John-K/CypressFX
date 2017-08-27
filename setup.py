@@ -10,7 +10,7 @@ name = 'CypressFX'
 desc = 'Python module to program Cypress FX EZ-USB series chipsets'
 long_desc = ''
 
-version = '0.2'
+version = '0.3'
 
 classifiers = [
     'Development Status :: 4 - Beta',
