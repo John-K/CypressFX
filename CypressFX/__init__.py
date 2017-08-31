@@ -41,7 +41,7 @@ class FX2(object):
         """Resets a device and optionally enables the CPU core"""
         cpu_address = 0xE600
         self.dev.ctrl_transfer(self.REQ_WRITE, self.CMD_RW_INTERNAL,
-                               cpu_address, 0x00, enable_cpu)
+                               cpu_address, 0x00, !enable_cpu)
 
     def __ensure_vend_ax_firmware(self):
         """Makes sure that we're running the default code"""
