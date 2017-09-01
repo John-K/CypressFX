@@ -9,8 +9,10 @@ import pkg_resources
 
 class FX2(object):
     """Supports firmware and EEPROM operations on Cypress FX2 devices"""
-    REQ_WRITE = 0x40
-    REQ_READ = 0xC0
+    REQ_WRITE = (usb.core.util.ENDPOINT_OUT | usb.core.util.CTRL_TYPE_VENDOR |
+                 usb.core.util.CTRL_RECIPIENT_DEVICE)
+    REQ_READ = (usb.core.util.ENDPOINT_IN | usb.core.util.CTRL_TYPE_VENDOR |
+                usb.core.util.CTRL_RECIPIENT_DEVICE)
     CMD_RW_INTERNAL = 0xA0
     CMD_RW_EEPROM = 0xA2
     MAX_CTRL_BUFFER_LENGTH = 4096
@@ -40,8 +42,18 @@ class FX2(object):
     def reset(self, enable_cpu):
         """Resets a device and optionally enables the CPU core"""
         cpu_address = 0xE600
-        self.dev.ctrl_transfer(self.REQ_WRITE, self.CMD_RW_INTERNAL,
-                               cpu_address, 0x00, !enable_cpu)
+        data = bytearray(1)
+
+        if enable_cpu:
+            data[0] = 0
+            print("reset CPU")
+        else:
+            print("stop CPU")
+            data[0] = 1
+        wrote = self.__send_usbctrldata(cpu_address & 0xFFFF, bytes(data))
+        if not wrote > 0:
+            return False
+        return True
 
     def __ensure_vend_ax_firmware(self):
         """Makes sure that we're running the default code"""
@@ -65,11 +77,21 @@ class FX2(object):
                                        0x00, 0x00, data)
         return wrote
 
+    def __send_usbctrldata(self, addr, data):
+        wrote = self.dev.ctrl_transfer(self.REQ_WRITE,
+                                       self.CMD_RW_INTERNAL,
+                                       addr, 0x00, data)
+        if not wrote == len(data):
+            raise IOError("Failed to write %d bytes to %x" % (len(data),
+                          addr))
+        return wrote
+
     def load_intelhex_firmware(self, filename):
         """Loads firmware from an IntelHex formatted file"""
         total = 0
         fw_hex = intelhex.IntelHex(filename)
-        self.reset(enable_cpu=False)
+        if not self.reset(enable_cpu=False):
+            raise IOError("Failed to halt CPU")
         for seg_start, seg_end in fw_hex.segments():
             data = fw_hex.tobinstr(start=seg_start, end=seg_end-1)
             # libusb issue #110 https://github.com/libusb/libusb/issues/110
@@ -78,6 +100,8 @@ class FX2(object):
                 end = len(data)
                 if end > self.MAX_CTRL_BUFFER_LENGTH:
                     end = self.MAX_CTRL_BUFFER_LENGTH
+                print("0x{0:04x} loading {1:4d} bytes".format(
+                      seg_start + offset, end))
                 wrote = self.dev.ctrl_transfer(self.REQ_WRITE,
                                                self.CMD_RW_INTERNAL,
                                                seg_start+offset, 0x00,
@@ -89,5 +113,7 @@ class FX2(object):
                 offset += wrote
                 data = data[end:]
 
-        self.reset(enable_cpu=True)
+        if not self.reset(enable_cpu=True):
+            raise IOError("Failed to start CPU")
+
         return total
